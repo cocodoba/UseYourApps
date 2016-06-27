@@ -1,6 +1,9 @@
 package com.example.shinoharanaoki.useyourapps;
 
+import android.content.IntentFilter;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -22,9 +25,11 @@ public class MainActivityFragment extends Fragment {
     private RecyclerView mRecyclerView = null;
     private RecyclerAdapter mAdapter = null;
 
-    private AppDataDao mdao;
-    private AppDataHelper dbHelper;
-    private SQLiteDatabase db;
+    private MyBroadcastReceiver myReceiver;
+    private IntentFilter intentFilter;
+
+    private Globals globals;
+
 
     public MainActivityFragment() {
     }
@@ -34,9 +39,14 @@ public class MainActivityFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
 
-        dbHelper = new AppDataHelper(getContext());
-        db = dbHelper.getWritableDatabase();
-        mdao = new AppDataDao(db);
+        myReceiver = new MyBroadcastReceiver();
+        intentFilter = new IntentFilter();
+        intentFilter.addAction("UPDATE_ACTION");
+        getActivity().registerReceiver(myReceiver, intentFilter);
+
+        myReceiver.registerHandler(updateHandler);
+
+        globals = (Globals) getActivity().getApplication();
 
     }
 
@@ -45,7 +55,7 @@ public class MainActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         mView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        //TODO addItemDecoration...エラーになるので保留
+        //FIXME addItemDecoration...エラーになるので保留
         /*mRecyclerView.addItemDecoration(new ListItemDecoration(
                 //getResources().getDimensionPixelSize(R.dimen.photos_list_spacing),
                 20, //
@@ -73,14 +83,35 @@ public class MainActivityFragment extends Fragment {
     private ArrayList<MonitoringApp> makeList() {
 
         //SQLデータベースからApp型リストへ変換するメソッド
-        ArrayList list = mdao.findAll();
+        ArrayList list = globals.appList;
         return list;
     }
 
     public void addApp(MonitoringApp app){
 
-        mdao.save(app);
         mAdapter.notifyItemInserted(0);
 
     }
+
+    public void removeApp(MonitoringApp app){
+
+        mAdapter.notifyItemRemoved(0);
+    }
+
+    /*サービスから値を受け取ったら動かしたい内容を書く*/
+    private Handler updateHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+
+            Bundle bundle = msg.getData();
+            String message = bundle.getString("message");
+
+            //FIXME リスト変数を更新してアダプタに知らせる
+            mAdapter.notifyDataSetChanged();
+
+            //TEST
+            Toast.makeText(getContext(),"はんどらーだよ" + message,Toast.LENGTH_SHORT);
+
+        }
+    };
 }

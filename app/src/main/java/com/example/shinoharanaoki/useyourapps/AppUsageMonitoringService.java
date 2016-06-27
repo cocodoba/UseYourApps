@@ -7,6 +7,7 @@ import android.app.usage.UsageStatsManager;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
@@ -32,6 +33,9 @@ import java.util.TreeMap;
 */
 
 public class AppUsageMonitoringService extends Service {
+
+
+    private Handler handler;
 
     private Timer timer = null;
     private int count = 0;//テスト用！！
@@ -104,6 +108,10 @@ public class AppUsageMonitoringService extends Service {
         timer.schedule( new TimerTask(){
             @Override
             public void run(){
+
+                //TEST
+                String message = "さーびすからのメッセージ";
+                sendUpdateBroadCast(message);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
                     SortedMap<String,UsageStats> usageStatsMap;
@@ -182,14 +190,17 @@ public class AppUsageMonitoringService extends Service {
     }
 
 
+    public void registerHandler(Handler updateHandler) {
+        handler = updateHandler;
+    }
 
 
     //TODO MainActivityFragment表示中ならそれを更新するメソッド
-    public void sendUpdateBroadCast(){
+    public void sendUpdateBroadCast(String message){
 
         Intent broadcastIntent = new Intent();
         //TEST new Dateはテスト用
-        broadcastIntent.putExtra("message", new Date().toString());
+        broadcastIntent.putExtra("message", message + new Date().toString());
         broadcastIntent.setAction("UPDATE_ACTION");
         // ブロードキャストへ配信させる
         getBaseContext().sendBroadcast(broadcastIntent);
