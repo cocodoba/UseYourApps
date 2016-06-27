@@ -17,6 +17,7 @@ public class MonitoringApp {
     long presetInterval;
     long timePerCredit;
     int credit;
+    int lastEarnedCredit;
 
     public MonitoringApp(String appname, String packageName){
         applicationName = appname;
@@ -52,6 +53,10 @@ public class MonitoringApp {
     public int getCredit(){
         return credit;
     }
+    public int getLastEarnedCredit() {
+        return lastEarnedCredit;
+    }
+
     public void setIcon(Drawable icon){
         this.icon = icon;
     }
@@ -72,10 +77,20 @@ public class MonitoringApp {
     public void setTimePerCredit(long t){
         timePerCredit = t;
     }
-    public void setCredit(int c){
-        /*TODO 戻ってきた値が0だった時に、今までの累計が0で上書きされたら困る*/
-        if(c != 0){
-            credit += c; // credit = credit + c
+    public void addCredit() {
+
+        lastEarnedCredit = 0;
+
+        if (useTime >= timePerCredit) {
+            long remainder; //割った余り
+
+            long earnedCredit = useTime / timePerCredit;
+            credit += (int) earnedCredit; // credit = credit + earnedCredit
+            lastEarnedCredit = (int)earnedCredit;
+
+            remainder = useTime % timePerCredit;
+            setUseTime(remainder);
+
         }
     }
 

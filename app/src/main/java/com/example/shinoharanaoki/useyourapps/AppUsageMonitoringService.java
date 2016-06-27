@@ -12,6 +12,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -25,6 +26,11 @@ import java.util.TreeMap;
 * これによってService、その他のActivityをそれぞれインスタンス化して参照し合う、などということをしなくてよくなる。
 * */
 
+
+/*TODO UsageStatsManagerが使えないLollipop未満の端末用のServiceと、
+       Marshmallow以上の端末用のServiceそれぞれ用意した方がいいかも知れない
+*/
+
 public class AppUsageMonitoringService extends Service {
 
     private Timer timer = null;
@@ -33,28 +39,16 @@ public class AppUsageMonitoringService extends Service {
     //TODO サービスの更新間隔を設定で変えられるようにする(300sec = 5min)
     private int interval = 300;
 
-    /*(パターン１：サービスでSQLファイルを用意する)
-    /*private AppDataHelper dbHelper;
-    private SQLiteDatabase db;
-    private AppDataDao mdao;*/
-
-    /*(パターン２：Globalsからデータを都度取得する)*/
     //グローバル変数
     Globals globals;
 
     public AppUsageMonitoringService() {
     }
 
-
     @Override
     public void onCreate(){
-        /*DaoからSQLファイルを取得(パターン１：サービスで用意する)*/
-        /*dbHelper = new AppDataHelper(getApplicationContext());
-        db = dbHelper.getWritableDatabase();
-        mdao = new AppDataDao(db);*/
 
-        /*(パターン２：Globalsからデータを都度取得する)*/
-        setUpAppListOnGlobals();
+        setUpAppListOnGlobals(); //メソッド分ける必要あるか？
     }
 
     /*(パターン２：Globalsからデータを都度取得する)*/
@@ -74,29 +68,27 @@ public class AppUsageMonitoringService extends Service {
     }
 
 
-            /*                                         UsageStatsManagerで
-            * Globalsのに置いてある監視リスト               OSから取得したアプリ履歴使用情報
-            * applistOnGlobals<>                                 ↓
-            *        ↓                                  UsageStats型オブジェクト
-            * 一個ずつ取り出す                                      ↓
-            *        ↓                                    全てSortedMapに一時格納
-            *        ↓           パッケージ名を元に順に照合           ↓
-            *   mapp mapp mapp....  → → → → → → → →  SortedMap.get(pname).getTotalTimeInForeground()
-            *                                        SortedMap.get(pname).getLastTimeUsed()
-            *                                         ...
-            *    mapp.set〇〇等で上書き ← ← ← ← ← ← ← ←   などのメソッドで使用履歴の詳細情報を取得
-            *         ↓
-            *
-            *
-            * */
+        /*                                         UsageStatsManagerで
+        * Globalsに置いてある監視リスト               OSから取得したアプリ履歴使用情報
+        * applistOnGlobals<>                                 ↓
+        *        ↓                                  UsageStats型オブジェクト
+        * 一個ずつ取り出す                                      ↓
+        *        ↓                                    全てSortedMapに一時格納
+        *        ↓           パッケージ名を元に順に照合           ↓
+        *   mapp mapp mapp....  → → → → → → → →  SortedMap.get(pname).getTotalTimeInForeground()
+        *                                        SortedMap.get(pname).getLastTimeUsed()
+        *                                         ...
+        *    mapp.set〇〇等で上書き ← ← ← ← ← ← ← ←   などのメソッドで使用履歴の詳細情報を取得
+        *         ↓
+        *
+        *
+        * */
 
     /*サービス起動時に毎回呼び出される*/
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("service", "onStartCommand");
-
         timer = new Timer();
-
         /*サービス駆動確認用*/
         timer.schedule( new TimerTask(){
             @Override
@@ -112,19 +104,19 @@ public class AppUsageMonitoringService extends Service {
         timer.schedule( new TimerTask(){
             @Override
             public void run(){
-                /*(パターン１：サービスでSQLファイルを用意する)
-                SQLデータがまだ無い時のために例外処理が絶対必要！！*/
-                /*try {
-                    if (mdao.exists()) {
-                        usageCheck(mdao.findAll());
-                    }
-                }catch(NullPointerException e){}*/
 
-                /*(パターン２：Globalsからデータを都度取得する)*/
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-                    Map<String,UsageStats> usageStatsMap;
-                    getUsageStatsMap();
+                    SortedMap<String,UsageStats> usageStatsMap;
+                    usageStatsMap = getUsageStatsMap();
+
                     usageCheck_ForAboveMarshMallow(globals.appList, usageStatsMap);
+
+                }else {
+                    //FIXME UsageStatsManagerが使えないLollipop未満の端末への対処
+                    //ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
+                    // Process running
+                    //@SuppressWarnings("deprecation") ActivityManager.RunningTaskInfo foregroundTaskInfo = activityManager.getRunningTasks(1).get(0);
+                    //foregroundProcess = foregroundTaskInfo.topActivity.getPackageName();
                 }
 
             }
@@ -134,12 +126,13 @@ public class AppUsageMonitoringService extends Service {
     }
 
 
-    private Map<String,UsageStats> getUsageStatsMap(){
 
-        ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
-        // Process running
-        //TODO UsageStatsManagerが使えないLollipop未満の端末への対処
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+
+    private SortedMap<String,UsageStats> getUsageStatsMap(){
+
+        SortedMap<String,UsageStats> mySortedMap = new TreeMap<>();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
             /*OSからアプリ使用履歴情報を取得*/
             UsageStatsManager mUsageStatsManager = (UsageStatsManager)getSystemService(USAGE_STATS_SERVICE);
             long time = System.currentTimeMillis();
@@ -148,108 +141,58 @@ public class AppUsageMonitoringService extends Service {
             // Sort the stats by the last time used
             //TODO SortedMapである必要はないかも
             if(stats != null) {
-                SortedMap<String,UsageStats> mySortedMap = new TreeMap<String,UsageStats>();
                 for (UsageStats usageStats : stats) {
                     mySortedMap.put(usageStats.getPackageName(), usageStats);
                 }
-
-                return mySortedMap;
-
-                //TODO SortedMapがNullだった時にする処理を用意する必要があるかも
-                if(mySortedMap != null && !mySortedMap.isEmpty()) {
-                    /*手順１：Globalsの監視用リストからアイテムをを１個ずつ取り出す*/
-                    for(MonitoringApp mapp : applistOnGlobals) {
-                        String pname = mapp.getPackageName();
-                        int earnedCredit;
-                        long mUsedTime;
-                        long tCredit;
-
-                        /*手順２：アイテムごとに、フォアグラウンドでの使用があれば実行時間と終了時刻をセーブ
-                        * mySortedMap.get()でUsageStats(アプリの使用情報オブジェクト)が得られる*/
-                        mapp.setUseTime(mySortedMap.get(pname).getTotalTimeInForeground());
-                        mapp.setLastTime(mySortedMap.get(pname).getLastTimeUsed());
-
-                        mUsedTime = mapp.getUseTime();
-                        tCredit = mapp.getTimePerCredit();
-
-                        if(mUsedTime >= tCredit){
-                            long remainder; //割った余り
-
-                            long mEarnedCredit = mUsedTime / tCredit;
-                            earnedCredit = (int)mEarnedCredit;
-                            remainder = mUsedTime % tCredit;
-
-                            mapp.setCredit(earnedCredit);
-                            mapp.setUseTime(remainder);
-
-                            Toast.makeText(this,String.format(("「%1$s」で %2$d credit獲得しました"),
-                                    mapp.getApplicationName(), earnedCredit),Toast.LENGTH_LONG).show();
-
-
-                        }
-
-                        /*(パターン１：サービスで用意する)*/
-                        /*mdao.save(mapp);*/
-
-                        Toast.makeText(this,String.format(("「%1$s」現在TOTAL %2$d credit"), mapp.getApplicationName(), mapp.getCredit()), Toast.LENGTH_LONG);
-
-                        //TODO sqlからuseTimeをapp.getInterval()と一個づつ比較して超えているものがあればダイアログを表示する等の処理
-
-
-                        //TODO MainActivityFragment表示中ならそれを更新するメソッド
-                    }
-                }
             }
-        } else {
-            //TODO Lollipop以下バージョン向けの処理
-            //@SuppressWarnings("deprecation") ActivityManager.RunningTaskInfo foregroundTaskInfo = activityManager.getRunningTasks(1).get(0);
-            //foregroundProcess = foregroundTaskInfo.topActivity.getPackageName();
         }
-
+        return mySortedMap;
     }
+
+
+
 
     public void usageCheck_ForAboveMarshMallow(ArrayList<MonitoringApp> applistOnGlobals, Map<String,UsageStats> usageStatsMap){
 
-        /*手順１：Globalsの監視用リストからアイテムをを１個ずつ取り出す*/
+        //TODO SortedMapがNullだった時にする処理を用意する必要があるかも
+        //if(mySortedMap != null && !mySortedMap.isEmpty()) {
+
+        /*手順１：Globalsの監視用リストからアイテムを１個ずつ取り出す*/
         for(MonitoringApp mapp : applistOnGlobals) {
             String pname = mapp.getPackageName();
-            int earnedCredit;
-            long mUsedTime;
-            long tCredit;
 
-                        /*手順２：アイテムごとに、フォアグラウンドでの使用があれば実行時間と終了時刻をセーブ
-                        * mySortedMap.get()でUsageStats(アプリの使用情報オブジェクト)が得られる*/
-            mapp.setUseTime(usageStatsMap.get(pname).getTotalTimeInForeground());
-            mapp.setLastTime(usageStatsMap.get(pname).getLastTimeUsed());
-
-            mUsedTime = mapp.getUseTime();
-            tCredit = mapp.getTimePerCredit();
-
-            if(mUsedTime >= tCredit){
-                long remainder; //割った余り
-
-                long mEarnedCredit = mUsedTime / tCredit;
-                earnedCredit = (int)mEarnedCredit;
-                remainder = mUsedTime % tCredit;
-
-                mapp.setCredit(earnedCredit);
-                mapp.setUseTime(remainder);
-
-                Toast.makeText(this,String.format(("「%1$s」で %2$d credit獲得しました"),
-                        mapp.getApplicationName(), earnedCredit),Toast.LENGTH_LONG).show();
-
-
+        /*手順２：アイテムごとに、フォアグラウンドでの使用があれば実行時間と終了時刻をセーブ
+        * mySortedMap.get()でUsageStats(アプリの使用情報オブジェクト)が得られる*/
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+                mapp.setUseTime(usageStatsMap.get(pname).getTotalTimeInForeground());
+                mapp.setLastTime(usageStatsMap.get(pname).getLastTimeUsed());
             }
 
-                        /*(パターン１：サービスで用意する)*/
-                        /*mdao.save(mapp);*/
-
-            Toast.makeText(this,String.format(("「%1$s」現在TOTAL %2$d credit"), mapp.getApplicationName(), mapp.getCredit()), Toast.LENGTH_LONG);
-
-            //TODO sqlからuseTimeをapp.getInterval()と一個づつ比較して超えているものがあればダイアログを表示する等の処理
+            mapp.addCredit();
 
 
-            //TODO MainActivityFragment表示中ならそれを更新するメソッド
+            /*TEST Globals変数への再保存確認用*/
+            Toast.makeText(this,String.format(("「%1$s」を %2$d 使用しました"),
+                    mapp.getApplicationName(), mapp.getUseTime()),Toast.LENGTH_LONG).show();
+
+            Toast.makeText(this,String.format(("「%1$s」で %2$d credit獲得しました"),
+                    mapp.getApplicationName(), mapp.getLastEarnedCredit()),Toast.LENGTH_LONG).show();
+        }
+        //TODO Globals.appListからuseTimeをmapp.getInterval()と一個づつ比較して超えているものがあればダイアログを表示する等の処理
+    }
+
+
+
+
+    //TODO MainActivityFragment表示中ならそれを更新するメソッド
+    public void sendUpdateBroadCast(){
+
+        Intent broadcastIntent = new Intent();
+        //TEST new Dateはテスト用
+        broadcastIntent.putExtra("message", new Date().toString());
+        broadcastIntent.setAction("UPDATE_ACTION");
+        // ブロードキャストへ配信させる
+        getBaseContext().sendBroadcast(broadcastIntent);
 
     }
 

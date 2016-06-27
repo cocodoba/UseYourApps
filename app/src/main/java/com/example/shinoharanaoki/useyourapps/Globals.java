@@ -2,6 +2,7 @@ package com.example.shinoharanaoki.useyourapps;
 
 import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -23,11 +24,20 @@ public class Globals extends Application {
 
     /*グローバル変数初期化*/
     public void GlobalsAllInit(){
+
+
         dbHelper = new AppDataHelper(getApplicationContext());
         db = dbHelper.getWritableDatabase();
         mdao = new AppDataDao(db);
 
-        appList = mdao.findAll();
+        //TODO SQLデータがまだ無い時のために例外処理が絶対必要！！*/
+        try {
+            if (mdao.exists()) {
+                appList = mdao.findAll();
+            }
+        }catch(NullPointerException e){
+
+        }
     }
 
     /*MainActivityFragmentで監視リストへの新規追加があったときに呼び出される*/
