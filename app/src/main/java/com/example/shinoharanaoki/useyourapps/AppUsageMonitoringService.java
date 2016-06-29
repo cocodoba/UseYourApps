@@ -35,7 +35,8 @@ import java.util.TreeMap;
 public class AppUsageMonitoringService extends Service {
 
 
-    private Handler handler;
+    private Handler handler;//FIXME 要らない？
+
 
     private Timer timer = null;
     private int count = 0;//テスト用！！
@@ -72,22 +73,6 @@ public class AppUsageMonitoringService extends Service {
     }
 
 
-        /*                                         UsageStatsManagerで
-        * Globalsに置いてある監視リスト               OSから取得したアプリ履歴使用情報
-        * applistOnGlobals<>                                 ↓
-        *        ↓                                  UsageStats型オブジェクト
-        * 一個ずつ取り出す                                      ↓
-        *        ↓                                    全てSortedMapに一時格納
-        *        ↓           パッケージ名を元に順に照合           ↓
-        *   mapp mapp mapp....  → → → → → → → →  SortedMap.get(pname).getTotalTimeInForeground()
-        *                                        SortedMap.get(pname).getLastTimeUsed()
-        *                                         ...
-        *    mapp.set〇〇等で上書き ← ← ← ← ← ← ← ←   などのメソッドで使用履歴の詳細情報を取得
-        *         ↓
-        *
-        *
-        * */
-
     /*サービス起動時に毎回呼び出される*/
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -117,7 +102,7 @@ public class AppUsageMonitoringService extends Service {
                     SortedMap<String,UsageStats> usageStatsMap;
                     usageStatsMap = getUsageStatsMap();
 
-                    usageCheck_ForAboveMarshMallow(globals.appList, usageStatsMap);
+                    usageCheck_aboveMarshmallow(globals.appList, usageStatsMap);
 
                 }else {
                     //FIXME UsageStatsManagerが使えないLollipop未満の端末への対処
@@ -134,6 +119,21 @@ public class AppUsageMonitoringService extends Service {
     }
 
 
+    /*                                         UsageStatsManagerで
+        * Globalsに置いてある監視リスト               OSから取得したアプリ履歴使用情報
+        * applistOnGlobals<>                                 ↓
+        *        ↓                                  UsageStats型オブジェクト
+        * 一個ずつ取り出す                                      ↓
+        *        ↓                                    全てSortedMapに一時格納
+        *        ↓           パッケージ名を元に順に照合           ↓
+        *   mapp mapp mapp....  → → → → → → → →  SortedMap.get(pname).getTotalTimeInForeground()
+        *                                        SortedMap.get(pname).getLastTimeUsed()
+        *                                         ...
+        *    mapp.set〇〇等で上書き ← ← ← ← ← ← ← ←   などのメソッドで使用履歴の詳細情報を取得
+        *         ↓
+        *
+        *
+        * */
 
 
     private SortedMap<String,UsageStats> getUsageStatsMap(){
@@ -160,7 +160,7 @@ public class AppUsageMonitoringService extends Service {
 
 
 
-    public void usageCheck_ForAboveMarshMallow(ArrayList<MonitoringApp> applistOnGlobals, Map<String,UsageStats> usageStatsMap){
+    public void usageCheck_aboveMarshmallow(ArrayList<MonitoringApp> applistOnGlobals, Map<String,UsageStats> usageStatsMap){
 
         //TODO SortedMapがNullだった時にする処理を用意する必要があるかも
         //if(mySortedMap != null && !mySortedMap.isEmpty()) {
@@ -189,7 +189,11 @@ public class AppUsageMonitoringService extends Service {
         //TODO Globals.appListからuseTimeをmapp.getInterval()と一個づつ比較して超えているものがあればダイアログを表示する等の処理
     }
 
+    public void usageCheck_BelowLollipop(){
+        //TODO UsageStatsManagerが使えないLollipop未満の端末への対処
+    }
 
+    //FIXME 要らない？
     public void registerHandler(Handler updateHandler) {
         handler = updateHandler;
     }

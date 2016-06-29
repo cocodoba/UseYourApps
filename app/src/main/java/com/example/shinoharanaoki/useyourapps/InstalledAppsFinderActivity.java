@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class InstalledAppsFinderActivity extends AppCompatActivity {
@@ -32,7 +33,7 @@ public class InstalledAppsFinderActivity extends AppCompatActivity {
 
         // 端末にインストール済のアプリケーション一覧情報を取得
         final PackageManager pm = getPackageManager();
-        final int flags = PackageManager.GET_UNINSTALLED_PACKAGES | PackageManager.GET_DISABLED_COMPONENTS;
+        final int flags = PackageManager.GET_META_DATA | PackageManager.GET_SHARED_LIBRARY_FILES;
         final List<ApplicationInfo> installedAppList = pm.getInstalledApplications(flags);
 
         AppDataHelper dbHelper = new AppDataHelper(this);
@@ -64,7 +65,9 @@ public class InstalledAppsFinderActivity extends AppCompatActivity {
                 ApplicationInfo item = installedAppList.get(position);
 
                 MonitoringApp newapp = new MonitoringApp(item.loadLabel(pm).toString(),item.packageName);
-                newapp.setIcon(item.loadIcon(pm));
+
+                //TODO アイコンはデータに保存せずに画面表示の都度ApplicationManagerからもらうようにする
+                //newapp.setIcon(item.loadIcon(pm));
 
                 PackageManager pManager = getPackageManager();
                 Intent intent = pManager.getLaunchIntentForPackage(item.packageName);
@@ -73,6 +76,9 @@ public class InstalledAppsFinderActivity extends AppCompatActivity {
                 Toast.makeText(InstalledAppsFinderActivity.this, item.loadLabel(pm).toString(), Toast.LENGTH_SHORT).show();
 
                 mdao.save(newapp);
+
+                //TODO インテントとハンドラ配信
+                sendUpdateBroadCast("監視対象のアプリが追加されました");
 
             }
         });
@@ -129,6 +135,20 @@ public class InstalledAppsFinderActivity extends AppCompatActivity {
         //CheckBox checkBox;
     }
 
-    //あとは略
+
+    /*
+    リストへの追加があったことをMainActivityFragmentのAdapterに向けてインテントで伝える
+    */
+    public void sendUpdateBroadCast(String message){
+
+        Intent broadcastIntent = new Intent();
+        //TEST new Dateはテスト用
+        broadcastIntent.putExtra("message", message + new Date().toString());
+        broadcastIntent.setAction("UPDATE_ACTION");
+        // ブロードキャストへ配信させる
+        getBaseContext().sendBroadcast(broadcastIntent);
+
+    }
+
 }
 

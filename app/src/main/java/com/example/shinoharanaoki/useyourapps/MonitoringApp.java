@@ -77,6 +77,10 @@ public class MonitoringApp {
     public void setTimePerCredit(long t){
         timePerCredit = t;
     }
+    public void setCredit(int c){
+        credit = c;
+    }
+
     public void addCredit() {
 
         lastEarnedCredit = 0;
