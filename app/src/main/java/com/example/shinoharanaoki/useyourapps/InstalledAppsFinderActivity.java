@@ -69,10 +69,6 @@ public class InstalledAppsFinderActivity extends AppCompatActivity {
                 //TODO アイコンはデータに保存せずに画面表示の都度ApplicationManagerからもらうようにする
                 //newapp.setIcon(item.loadIcon(pm));
 
-                PackageManager pManager = getPackageManager();
-                Intent intent = pManager.getLaunchIntentForPackage(item.packageName);
-                startActivity(intent);
-
                 Toast.makeText(InstalledAppsFinderActivity.this, item.loadLabel(pm).toString(), Toast.LENGTH_SHORT).show();
 
                 mdao.save(newapp);

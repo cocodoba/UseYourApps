@@ -1,6 +1,7 @@
 package com.example.shinoharanaoki.useyourapps;
 
 import android.app.Application;
+import android.app.usage.UsageStats;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
@@ -38,6 +39,22 @@ public class Globals extends Application {
         }catch(NullPointerException e){
 
         }
+    }
+
+    public void GlobalsAllSave(){
+
+        try {
+            if (mdao.exists()) {
+                if(appList != null) {
+                    for (MonitoringApp app : appList) {
+                        mdao.save(app);
+                    }
+                }
+            }
+        }catch(NullPointerException e){
+
+        }
+
     }
 
     /*MainActivityFragmentで監視リストへの新規追加があったときに呼び出される*/

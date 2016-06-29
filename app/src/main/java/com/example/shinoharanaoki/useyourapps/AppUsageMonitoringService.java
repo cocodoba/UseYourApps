@@ -118,6 +118,27 @@ public class AppUsageMonitoringService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+            SortedMap<String,UsageStats> usageStatsMap;
+            usageStatsMap = getUsageStatsMap();
+
+            usageCheck_aboveMarshmallow(globals.appList, usageStatsMap);
+
+            globals.GlobalsAllSave();
+
+        }else {
+            //FIXME UsageStatsManagerが使えないLollipop未満の端末への対処
+            //ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
+            // Process running
+            //@SuppressWarnings("deprecation") ActivityManager.RunningTaskInfo foregroundTaskInfo = activityManager.getRunningTasks(1).get(0);
+            //foregroundProcess = foregroundTaskInfo.topActivity.getPackageName();
+        }
+
+    }
 
     /*                                         UsageStatsManagerで
         * Globalsに置いてある監視リスト               OSから取得したアプリ履歴使用情報
