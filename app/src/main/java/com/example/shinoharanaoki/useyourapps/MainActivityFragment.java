@@ -62,7 +62,6 @@ public class MainActivityFragment extends Fragment {
                 //getResources().getInteger(R.integer.photo_list_preview_columns)));
                 1) //�1)
         );*/
-        //to[2]
         // RecyclerViewの参照を取得
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recycler_view);
         // レイアウトマネージャを設定(ここで縦方向の標準リストであることを指定)
@@ -74,10 +73,25 @@ public class MainActivityFragment extends Fragment {
     }
 
     @Override
-    public void onDestroy() {
-        getActivity().unregisterReceiver(myReceiver);
-        super.onDestroy();
+    public void onResume() {
+        super.onResume();
+        myReceiver = new MyBroadcastReceiver();
+        intentFilter = new IntentFilter();
+        intentFilter.addAction("UPDATE_ACTION");
+        getActivity().registerReceiver(myReceiver, intentFilter);
+
+        myReceiver.registerHandler(updateHandler);
+
     }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        getActivity().unregisterReceiver(myReceiver);
+
+    }
+
+
 
     private void setupRecyclerView(RecyclerView recyclerView) {
 

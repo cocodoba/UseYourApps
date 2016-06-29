@@ -32,19 +32,25 @@ public class Globals extends Application {
         mdao = new AppDataDao(db);
 
         //TODO SQLデータがまだ無い時のために例外処理が絶対必要！！*/
+
+        if (mdao.exists()) {
+            appList = mdao.findAll();
+        }else{
+            //TEST
+            int index = 1;
+            String app = "FakeApp";
+            String pname = "anonymous.fake.app";
+            appList.add(index, new MonitoringApp(app, pname));
+
+        }
+
+        //TODO throwを書いてみる
         try {
             if (mdao.exists()) {
                 appList = mdao.findAll();
             }
         }catch(NullPointerException e){
-
-            //TEST
-            int index = 1;
-            String app = "FakeApp";
-            String pname = "anonymous.fake.app";
-            appList.add(1, new MonitoringApp(app, pname));
-
-            //TODO throwを書いてみる
+            throw new NullPointerException("SQLdb is Null");
 
         }
     }
