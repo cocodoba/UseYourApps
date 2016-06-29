@@ -38,6 +38,14 @@ public class Globals extends Application {
             }
         }catch(NullPointerException e){
 
+            //TEST
+            int index = 1;
+            String app = "FakeApp";
+            String pname = "anonymous.fake.app";
+            appList.add(1, new MonitoringApp(app, pname));
+
+            //TODO throwを書いてみる
+
         }
     }
 
@@ -65,6 +73,10 @@ public class Globals extends Application {
     /*MainActivityFragmentで監視リストからのアプリ削除操作があったときに呼び出される*/
     public void deleteFromAppList(){
 
+    }
+
+    public boolean isListExist(){
+            return !appList.isEmpty();
     }
 
     /*

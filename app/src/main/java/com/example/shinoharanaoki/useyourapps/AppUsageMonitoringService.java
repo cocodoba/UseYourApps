@@ -99,10 +99,12 @@ public class AppUsageMonitoringService extends Service {
                 sendUpdateBroadCast(message);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-                    SortedMap<String,UsageStats> usageStatsMap;
-                    usageStatsMap = getUsageStatsMap();
+                    if(globals.isListExist()) {
+                        SortedMap<String, UsageStats> usageStatsMap;
+                        usageStatsMap = getUsageStatsMap();
 
-                    usageCheck_aboveMarshmallow(globals.appList, usageStatsMap);
+                        usageCheck_aboveMarshmallow(globals.appList, usageStatsMap);
+                    }
 
                 }else {
                     //FIXME UsageStatsManagerが使えないLollipop未満の端末への対処

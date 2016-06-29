@@ -73,6 +73,12 @@ public class MainActivityFragment extends Fragment {
         return mView;
     }
 
+    @Override
+    public void onDestroy() {
+        getActivity().unregisterReceiver(myReceiver);
+        super.onDestroy();
+    }
+
     private void setupRecyclerView(RecyclerView recyclerView) {
 
         mAdapter = new RecyclerAdapter(getActivity(),makeList());
