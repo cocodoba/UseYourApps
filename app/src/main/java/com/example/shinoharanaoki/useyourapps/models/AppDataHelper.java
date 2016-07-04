@@ -1,8 +1,10 @@
-package com.example.shinoharanaoki.useyourapps;
+package com.example.shinoharanaoki.useyourapps.models;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
+import com.example.shinoharanaoki.useyourapps.models.AppDataDao;
 
 /**
  * Created by shinoharanaoki on 2016/06/14.

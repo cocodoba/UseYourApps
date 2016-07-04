@@ -1,8 +1,10 @@
-package com.example.shinoharanaoki.useyourapps;
+package com.example.shinoharanaoki.useyourapps.models;
 
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+
+import com.example.shinoharanaoki.useyourapps.models.MonitoringApp;
 
 import java.util.ArrayList;
 
@@ -77,7 +79,6 @@ public class AppDataDao {
     }
 
 
-
     public MonitoringApp find(String pname) {
         // query生成
         Cursor c = db.query(TABLE_NAME,
@@ -114,6 +115,7 @@ public class AppDataDao {
      */
 
     //TODO saveAll()を用意する
+    //TODO 順番を指定して保存するには？
 
     public long save(MonitoringApp app) {
         /*if (!app.validate()) {
@@ -157,8 +159,8 @@ public class AppDataDao {
 
     /**
      * データベースが空かどうかチェック
-     *
-     * @return
+     * 存在すればtrueを返す
+     * @return boolean
      */
     public boolean exists() {
         return findAll().size() > 0;

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable;
 import android.support.v7.app.AppCompatActivity;
@@ -14,11 +13,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.shinoharanaoki.useyourapps.models.AppDataDao;
+import com.example.shinoharanaoki.useyourapps.models.AppDataHelper;
+import com.example.shinoharanaoki.useyourapps.models.MonitoringApp;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,7 +46,6 @@ public class InstalledAppsFinderActivity extends AppCompatActivity {
         for (ApplicationInfo app : installedAppList) {
             AppData data = new AppData();
             data.label = app.loadLabel(pm).toString();
-            data.icon = app.loadIcon(pm);
             //TODO 既に監視対象に登録済みのアプリはリストに表示しないようにする
             //data.pname = app.packageName;
             dataList.add(data);

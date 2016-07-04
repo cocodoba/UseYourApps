@@ -1,4 +1,4 @@
-package com.example.shinoharanaoki.useyourapps;
+package com.example.shinoharanaoki.useyourapps.models;
 
 import android.graphics.drawable.Drawable;
 

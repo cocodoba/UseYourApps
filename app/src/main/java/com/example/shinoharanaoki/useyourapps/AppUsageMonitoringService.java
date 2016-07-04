@@ -1,16 +1,16 @@
 package com.example.shinoharanaoki.useyourapps;
 
-import android.app.ActivityManager;
 import android.app.Service;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.example.shinoharanaoki.useyourapps.models.MonitoringApp;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,9 +34,7 @@ import java.util.TreeMap;
 
 public class AppUsageMonitoringService extends Service {
 
-
     private Handler handler;//FIXME 要らない？
-
 
     private Timer timer = null;
     private int count = 0;//テスト用！！
@@ -62,7 +60,6 @@ public class AppUsageMonitoringService extends Service {
         globals = (Globals) this.getApplication();
         //初期化
         globals.GlobalsAllInit();
-
     }
 
     //TODO 要らないかもしれないので後で消してみる↓
@@ -71,7 +68,6 @@ public class AppUsageMonitoringService extends Service {
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
     }
-
 
     /*サービス起動時に毎回呼び出される*/
     @Override
@@ -98,8 +94,9 @@ public class AppUsageMonitoringService extends Service {
                 String message = "さーびすからのメッセージ";
                 sendUpdateBroadCast(message);
 
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-                    if(globals.isListExist()) {
+                    if(globals.isDataExist()) {
                         SortedMap<String, UsageStats> usageStatsMap;
                         usageStatsMap = getUsageStatsMap();
 
@@ -186,28 +183,29 @@ public class AppUsageMonitoringService extends Service {
     public void usageCheck_aboveMarshmallow(ArrayList<MonitoringApp> applistOnGlobals, Map<String,UsageStats> usageStatsMap){
 
         //TODO SortedMapがNullだった時にする処理を用意する必要があるかも
-        //if(mySortedMap != null && !mySortedMap.isEmpty()) {
+        if(usageStatsMap != null && !usageStatsMap.isEmpty()) {
 
-        /*手順１：Globalsの監視用リストからアイテムを１個ずつ取り出す*/
-        for(MonitoringApp mapp : applistOnGlobals) {
-            String pname = mapp.getPackageName();
+            /*手順１：Globalsの監視用リストからアイテムを１個ずつ取り出す*/
+            for(MonitoringApp mapp : applistOnGlobals) {
+                String pname = mapp.getPackageName();
 
-        /*手順２：アイテムごとに、フォアグラウンドでの使用があれば実行時間と終了時刻をセーブ
-        * mySortedMap.get()でUsageStats(アプリの使用情報オブジェクト)が得られる*/
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-                mapp.setUseTime(usageStatsMap.get(pname).getTotalTimeInForeground());
-                mapp.setLastTime(usageStatsMap.get(pname).getLastTimeUsed());
+            /*手順２：アイテムごとに、フォアグラウンドでの使用があれば実行時間と終了時刻をセーブ
+            * mySortedMap.get()でUsageStats(アプリの使用情報オブジェクト)が得られる*/
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    mapp.setUseTime(usageStatsMap.get(pname).getTotalTimeInForeground());
+                    mapp.setLastTime(usageStatsMap.get(pname).getLastTimeUsed());
+                }
+
+                mapp.addCredit();
+
+
+                /*TEST Globals変数への再保存確認用*/
+                Toast.makeText(this, String.format(("「%1$s」を %2$d 使用しました"),
+                        mapp.getApplicationName(), mapp.getUseTime()), Toast.LENGTH_LONG).show();
+
+                Toast.makeText(this, String.format(("「%1$s」で %2$d credit獲得しました"),
+                        mapp.getApplicationName(), mapp.getLastEarnedCredit()), Toast.LENGTH_LONG).show();
             }
-
-            mapp.addCredit();
-
-
-            /*TEST Globals変数への再保存確認用*/
-            Toast.makeText(this,String.format(("「%1$s」を %2$d 使用しました"),
-                    mapp.getApplicationName(), mapp.getUseTime()),Toast.LENGTH_LONG).show();
-
-            Toast.makeText(this,String.format(("「%1$s」で %2$d credit獲得しました"),
-                    mapp.getApplicationName(), mapp.getLastEarnedCredit()),Toast.LENGTH_LONG).show();
         }
         //TODO Globals.appListからuseTimeをmapp.getInterval()と一個づつ比較して超えているものがあればダイアログを表示する等の処理
     }

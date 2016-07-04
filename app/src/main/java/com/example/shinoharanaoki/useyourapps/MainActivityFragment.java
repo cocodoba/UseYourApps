@@ -1,7 +1,6 @@
 package com.example.shinoharanaoki.useyourapps;
 
 import android.content.IntentFilter;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
@@ -13,8 +12,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.example.shinoharanaoki.useyourapps.models.MonitoringApp;
+
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A placeholder fragment containing a simple view.
