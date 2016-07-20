@@ -1,4 +1,4 @@
-package com.example.shinoharanaoki.useyourapps;
+package com.example.shinoharanaoki.useyourapps.main_activity;
 
 import android.graphics.Canvas;
 import android.graphics.Rect;

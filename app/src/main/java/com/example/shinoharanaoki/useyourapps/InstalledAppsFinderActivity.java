@@ -27,6 +27,8 @@ import java.util.List;
 
 public class InstalledAppsFinderActivity extends AppCompatActivity {
 
+    private Globals globals;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,6 +42,8 @@ public class InstalledAppsFinderActivity extends AppCompatActivity {
         AppDataHelper dbHelper = new AppDataHelper(this);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         final AppDataDao mdao = new AppDataDao(db);
+
+        globals = (Globals) this.getApplication();
 
         // リストに一覧データを格納する
         final List<AppData> dataList = new ArrayList<>();
@@ -69,12 +73,13 @@ public class InstalledAppsFinderActivity extends AppCompatActivity {
                 //TODO アイコンはデータに保存せずに画面表示の都度ApplicationManagerからもらうようにする
                 //newapp.setIcon(item.loadIcon(pm));
 
+                globals.addToAppList(newapp);
+
                 Toast.makeText(InstalledAppsFinderActivity.this, item.loadLabel(pm).toString(), Toast.LENGTH_SHORT).show();
 
-                mdao.save(newapp);
 
                 //TODO インテントとハンドラ配信
-                sendUpdateBroadCast("監視対象のアプリが追加されました");
+                //sendUpdateBroadCast("監視対象のアプリが追加されました");
 
             }
         });
@@ -135,16 +140,19 @@ public class InstalledAppsFinderActivity extends AppCompatActivity {
     /*
     リストへの追加があったことをMainActivityFragmentのAdapterに向けてインテントで伝える
     */
-    public void sendUpdateBroadCast(String message){
+    /*public void sendUpdateBroadCast(String message){
 
         Intent broadcastIntent = new Intent();
         //TEST new Dateはテスト用
         broadcastIntent.putExtra("message", message + new Date().toString());
-        broadcastIntent.setAction("UPDATE_ACTION");
+        //Intent putExtra (String name, String value)
+        broadcastIntent.setAction("MY_ACTION");
         // ブロードキャストへ配信させる
         getBaseContext().sendBroadcast(broadcastIntent);
 
-    }
+        Toast.makeText(InstalledAppsFinderActivity.this, "sendUpdateBroadCast", Toast.LENGTH_SHORT).show();
+
+    }*/
 
 }
 

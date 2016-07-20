@@ -1,4 +1,4 @@
-package com.example.shinoharanaoki.useyourapps;
+package com.example.shinoharanaoki.useyourapps.main_activity;
 
 import android.content.IntentFilter;
 import android.os.Handler;
@@ -12,6 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.example.shinoharanaoki.useyourapps.Globals;
+import com.example.shinoharanaoki.useyourapps.R;
 import com.example.shinoharanaoki.useyourapps.models.MonitoringApp;
 
 import java.util.ArrayList;
@@ -38,16 +40,7 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-
-        myReceiver = new MyBroadcastReceiver();
-        intentFilter = new IntentFilter();
-        intentFilter.addAction("UPDATE_ACTION");
-        getActivity().registerReceiver(myReceiver, intentFilter);
-
-        myReceiver.registerHandler(updateHandler);
-
         globals = (Globals) getActivity().getApplication();
-
     }
 
     @Override
@@ -72,39 +65,12 @@ public class MainActivityFragment extends Fragment {
         return mView;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        myReceiver = new MyBroadcastReceiver();
-        intentFilter = new IntentFilter();
-        intentFilter.addAction("UPDATE_ACTION");
-        getActivity().registerReceiver(myReceiver, intentFilter);
-
-        myReceiver.registerHandler(updateHandler);
-
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        getActivity().unregisterReceiver(myReceiver);
-
-    }
-
-
 
     private void setupRecyclerView(RecyclerView recyclerView) {
 
-        mAdapter = new RecyclerAdapter(getActivity(),makeList());
+        mAdapter = globals.getAdapter();
         recyclerView.setAdapter(mAdapter);
         //to[4]
-    }
-
-    private ArrayList<MonitoringApp> makeList() {
-
-        //SQLデータベースからApp型リストへ変換するメソッド
-        ArrayList list = globals.appList;
-        return list;
     }
 
     public void addApp(MonitoringApp app){
@@ -117,21 +83,4 @@ public class MainActivityFragment extends Fragment {
 
         mAdapter.notifyItemRemoved(0);
     }
-
-    /*サービスから値を受け取ったら動かしたい内容を書く*/
-    private Handler updateHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-
-            Bundle bundle = msg.getData();
-            String message = bundle.getString("message");
-
-            //FIXME リスト変数を更新してアダプタに知らせる
-            mAdapter.notifyDataSetChanged();
-
-            //TEST
-            Toast.makeText(getContext(),"はんどらーだよ" + message,Toast.LENGTH_SHORT);
-
-        }
-    };
 }

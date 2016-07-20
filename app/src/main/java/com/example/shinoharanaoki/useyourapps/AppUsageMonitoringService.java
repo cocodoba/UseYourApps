@@ -34,23 +34,20 @@ import java.util.TreeMap;
 
 public class AppUsageMonitoringService extends Service {
 
-    private Handler handler;//FIXME 要らない？
-
     private Timer timer = null;
     private int count = 0;//テスト用！！
     
     //TODO サービスの更新間隔を設定で変えられるようにする(300sec = 5min)
-    private int interval = 300;
+    private int interval_seconds = 30;
 
     //グローバル変数
-    Globals globals;
+    private Globals globals;
 
     public AppUsageMonitoringService() {
     }
 
     @Override
     public void onCreate(){
-
         setUpAppListOnGlobals(); //メソッド分ける必要あるか？
     }
 
@@ -74,7 +71,9 @@ public class AppUsageMonitoringService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("service", "onStartCommand");
         timer = new Timer();
-        /*サービス駆動確認用*/
+
+        /*
+        * TEST サービス駆動確認用*/
         timer.schedule( new TimerTask(){
             @Override
             public void run(){
@@ -83,36 +82,33 @@ public class AppUsageMonitoringService extends Service {
             }
         }, 0, 1000);
 
-        /*
-        指定した時間(interval)が来るごとにusageCheck()メソッドを呼び出して実行
+        /**
+         *
+        指定した時間(interval)が来るごとに usageCheck()メソッドを呼び出して実行
         */
         timer.schedule( new TimerTask(){
             @Override
             public void run(){
-
-                //TEST
-                String message = "さーびすからのメッセージ";
-                sendUpdateBroadCast(message);
-
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-                    if(globals.isDataExist()) {
+                if(!globals.isListEmpty()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         SortedMap<String, UsageStats> usageStatsMap;
                         usageStatsMap = getUsageStatsMap();
 
-                        usageCheck_aboveMarshmallow(globals.appList, usageStatsMap);
+                        //TODO SortedMapがNullだった時にする処理を用意する必要があるかも
+                        if (usageStatsMap != null && !usageStatsMap.isEmpty()) {
+                            usageCheck_aboveLollipop(globals.appList, usageStatsMap);
+                        }
+                    } else {
+                        //FIXME UsageStatsManagerが使えないLollipop未満の端末への対処
+                        //ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
+                        // Process running
+                        //@SuppressWarnings("deprecation") ActivityManager.RunningTaskInfo foregroundTaskInfo = activityManager.getRunningTasks(1).get(0);
+                        //foregroundProcess = foregroundTaskInfo.topActivity.getPackageName();
                     }
-
-                }else {
-                    //FIXME UsageStatsManagerが使えないLollipop未満の端末への対処
-                    //ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
-                    // Process running
-                    //@SuppressWarnings("deprecation") ActivityManager.RunningTaskInfo foregroundTaskInfo = activityManager.getRunningTasks(1).get(0);
-                    //foregroundProcess = foregroundTaskInfo.topActivity.getPackageName();
                 }
 
             }
-        }, 3000, 1000*interval);
+        }, 3000, 1000*interval_seconds);
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -121,20 +117,22 @@ public class AppUsageMonitoringService extends Service {
     public void onDestroy() {
         super.onDestroy();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-            SortedMap<String,UsageStats> usageStatsMap;
-            usageStatsMap = getUsageStatsMap();
+        if(!globals.isListEmpty()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                SortedMap<String, UsageStats> usageStatsMap;
+                usageStatsMap = getUsageStatsMap();
 
-            usageCheck_aboveMarshmallow(globals.appList, usageStatsMap);
+                usageCheck_aboveLollipop(globals.appList, usageStatsMap);
 
-            globals.GlobalsAllSave();
+                globals.GlobalsAllSave();
 
-        }else {
-            //FIXME UsageStatsManagerが使えないLollipop未満の端末への対処
-            //ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
-            // Process running
-            //@SuppressWarnings("deprecation") ActivityManager.RunningTaskInfo foregroundTaskInfo = activityManager.getRunningTasks(1).get(0);
-            //foregroundProcess = foregroundTaskInfo.topActivity.getPackageName();
+            } else {
+                //FIXME UsageStatsManagerが使えないLollipop未満の端末への対処
+                //ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
+                // Process running
+                //@SuppressWarnings("deprecation") ActivityManager.RunningTaskInfo foregroundTaskInfo = activityManager.getRunningTasks(1).get(0);
+                //foregroundProcess = foregroundTaskInfo.topActivity.getPackageName();
+            }
         }
 
     }
@@ -165,7 +163,8 @@ public class AppUsageMonitoringService extends Service {
             UsageStatsManager mUsageStatsManager = (UsageStatsManager)getSystemService(USAGE_STATS_SERVICE);
             long time = System.currentTimeMillis();
             // We get usage stats for the last interval
-            List<UsageStats> stats = mUsageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000*interval, time);
+            List<UsageStats> stats = mUsageStatsManager.queryUsageStats
+                    (UsageStatsManager.INTERVAL_DAILY, time - 1000*interval_seconds, time);
             // Sort the stats by the last time used
             //TODO SortedMapである必要はないかも
             if(stats != null) {
@@ -173,24 +172,32 @@ public class AppUsageMonitoringService extends Service {
                     mySortedMap.put(usageStats.getPackageName(), usageStats);
                 }
             }
+
+            /**
+             *
+             * For Test*/
+            if(stats != null) {
+                Toast.makeText(AppUsageMonitoringService.this, "UsageStatsMap is Not Null", Toast.LENGTH_SHORT).show();
+            }
+
+
         }
         return mySortedMap;
     }
 
 
+    public void usageCheck_aboveLollipop(ArrayList<MonitoringApp> applistOnGlobals, Map<String,UsageStats> usageStatsMap){
 
-
-    public void usageCheck_aboveMarshmallow(ArrayList<MonitoringApp> applistOnGlobals, Map<String,UsageStats> usageStatsMap){
-
-        //TODO SortedMapがNullだった時にする処理を用意する必要があるかも
-        if(usageStatsMap != null && !usageStatsMap.isEmpty()) {
-
-            /*手順１：Globalsの監視用リストからアイテムを１個ずつ取り出す*/
+            /**
+             * 手順１：Globalsの監視用リストからアイテムを１個ずつ取り出す*/
             for(MonitoringApp mapp : applistOnGlobals) {
                 String pname = mapp.getPackageName();
 
-            /*手順２：アイテムごとに、フォアグラウンドでの使用があれば実行時間と終了時刻をセーブ
-            * mySortedMap.get()でUsageStats(アプリの使用情報オブジェクト)が得られる*/
+            /**手順２：
+             * アイテムごとに mySortedMap.get()で、
+             * UsageStats(アプリの使用情報オブジェクト)が得られるので、
+             * フォアグラウンドでの使用があれば実行時間と終了時刻をセーブ
+            * */
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     mapp.setUseTime(usageStatsMap.get(pname).getTotalTimeInForeground());
                     mapp.setLastTime(usageStatsMap.get(pname).getLastTimeUsed());
@@ -198,41 +205,30 @@ public class AppUsageMonitoringService extends Service {
 
                 mapp.addCredit();
 
+                /**
+                 * RecyclerViewの表示を更新する*/
+                globals.adapterNotify();
 
-                /*TEST Globals変数への再保存確認用*/
+
+                /**
+                 *
+                 *
+                 * TEST Globals変数への再保存確認用*/
                 Toast.makeText(this, String.format(("「%1$s」を %2$d 使用しました"),
                         mapp.getApplicationName(), mapp.getUseTime()), Toast.LENGTH_LONG).show();
 
                 Toast.makeText(this, String.format(("「%1$s」で %2$d credit獲得しました"),
                         mapp.getApplicationName(), mapp.getLastEarnedCredit()), Toast.LENGTH_LONG).show();
+
+
+
+
             }
-        }
+
         //TODO Globals.appListからuseTimeをmapp.getInterval()と一個づつ比較して超えているものがあればダイアログを表示する等の処理
     }
 
     public void usageCheck_BelowLollipop(){
         //TODO UsageStatsManagerが使えないLollipop未満の端末への対処
     }
-
-    //FIXME 要らない？
-    public void registerHandler(Handler updateHandler) {
-        handler = updateHandler;
-    }
-
-
-    //TODO MainActivityFragment表示中ならそれを更新するメソッド
-    public void sendUpdateBroadCast(String message){
-
-        Intent broadcastIntent = new Intent();
-        //TEST new Dateはテスト用
-        broadcastIntent.putExtra("message", message + new Date().toString());
-        broadcastIntent.setAction("UPDATE_ACTION");
-        // ブロードキャストへ配信させる
-        getBaseContext().sendBroadcast(broadcastIntent);
-
-    }
-
-
-
-
 }

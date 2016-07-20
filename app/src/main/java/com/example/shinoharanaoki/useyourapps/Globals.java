@@ -2,7 +2,9 @@ package com.example.shinoharanaoki.useyourapps;
 
 import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
+import android.widget.Toast;
 
+import com.example.shinoharanaoki.useyourapps.main_activity.RecyclerAdapter;
 import com.example.shinoharanaoki.useyourapps.models.AppDataDao;
 import com.example.shinoharanaoki.useyourapps.models.AppDataHelper;
 import com.example.shinoharanaoki.useyourapps.models.MonitoringApp;
@@ -18,11 +20,13 @@ public class Globals extends Application {
     private SQLiteDatabase db;
     private AppDataDao mdao;
 
-    private boolean dataExist = false;
+    private RecyclerAdapter rAdapter;
+
+    //private boolean dataExist = false;
 
     /*ServiceやMainActivityFragmentで使用する参照用リスト
     * アプリ、もしくはサービス起動中には、監視アプリリストがここに常に保持される* */
-    ArrayList<MonitoringApp> appList;
+    public ArrayList<MonitoringApp> appList;
 
 
     /*グローバル変数初期化*/
@@ -36,10 +40,10 @@ public class Globals extends Application {
 
         if (mdao.exists()) {
             appList = mdao.findAll();
-            dataExist = true;
+            //dataExist = true;
         }else{
             appList = new ArrayList<>();
-            dataExist = false;
+            //dataExist = false;
             //TEST
             /*String app = "FakeApp";
             String pname = "anonymous.fake.app";
@@ -55,6 +59,8 @@ public class Globals extends Application {
         }catch(NullPointerException e){
             throw new NullPointerException("SQLdb is Null");
         }
+
+        rAdapter = new RecyclerAdapter(getApplicationContext(), appList);
     }
 
     public void GlobalsAllSave(){
@@ -72,33 +78,53 @@ public class Globals extends Application {
         }
     }
 
+    private ArrayList<MonitoringApp> makeList() {
+
+        //SQLデータベースからApp型リストへ変換するメソッド
+        ArrayList list = appList;
+        return list;
+    }
+
     /*MainActivityFragmentで監視リストへの新規追加があったときに呼び出される*/
     public void addToAppList(MonitoringApp newApp){
         appList.add(newApp);
-        dataExist = true;
+        adapterNotify();
+        //dataExist = true;
+
+        /**
+         * For Test*/
+        Toast.makeText(Globals.this, "add an item and adapter notify", Toast.LENGTH_SHORT).show();
+
     }
 
     /*MainActivityFragmentで監視リストからのアプリ削除操作があったときに呼び出される*/
     public void deleteFromAppList(){
 
-        if(!isListExist()){
-            dataExist = false;
+        if(!isListEmpty()){
+            //dataExist = false;
         }
-
     }
 
-    public boolean isListExist(){
-            return !appList.isEmpty();
+    public boolean isListEmpty(){
+            return appList.isEmpty();
     }
 
-    public boolean isDataExist() {
+    /*public boolean isDataExist() {
         return dataExist;
-    }
+    }*/
     /*
     注意：グローバルクラスなのでゲッターいらない
     public ArrayList<MonitoringApp> getAppList()
 
         return appList;
     }*/
+
+    public RecyclerAdapter getAdapter(){
+        return rAdapter;
+    }
+
+    public void adapterNotify(){
+        rAdapter.notifyDataSetChanged();
+    }
 
 }

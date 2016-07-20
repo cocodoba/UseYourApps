@@ -1,4 +1,4 @@
-package com.example.shinoharanaoki.useyourapps;
+package com.example.shinoharanaoki.useyourapps.main_activity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.shinoharanaoki.useyourapps.Globals;
+import com.example.shinoharanaoki.useyourapps.R;
 import com.example.shinoharanaoki.useyourapps.models.MonitoringApp;
 
 import java.util.ArrayList;
@@ -22,6 +24,8 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     private ArrayList<MonitoringApp> mData;
     private Context mContext;
     private MonitoringApp mApp;
+
+    private Globals globals;
     //private OnRecyclerListener mListener;
 
     public RecyclerAdapter(Context context, ArrayList<MonitoringApp> data) {
@@ -72,7 +76,10 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         }
     }
 
-
+    public void reloadDataSet(ArrayList<MonitoringApp> data){
+        mData = data;
+        notifyDataSetChanged();
+    }
     // ViewHolder(固有ならインナークラスでOK)
 
     class ViewHolder extends RecyclerView.ViewHolder {
