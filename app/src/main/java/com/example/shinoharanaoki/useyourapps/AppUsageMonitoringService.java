@@ -43,6 +43,8 @@ public class AppUsageMonitoringService extends Service {
     //グローバル変数
     private Globals globals;
 
+    private final Handler handler= new Handler();
+
     public AppUsageMonitoringService() {
     }
 
@@ -74,39 +76,52 @@ public class AppUsageMonitoringService extends Service {
 
         /*
         * TEST サービス駆動確認用*/
-        timer.schedule( new TimerTask(){
+        /*timer.schedule( new TimerTask(){
             @Override
             public void run(){
                 Log.d( "TestService" , "count = "+ count );
                 count++;
             }
-        }, 0, 1000);
+        }, 0, 1000);*/
 
         /**
          *
         指定した時間(interval)が来るごとに usageCheck()メソッドを呼び出して実行
+
+         自分で新たに作成したスレッド(TimerTask)の中ではUI操作(Toast表示)ができないので、
+         Handlerを用意してUIスレッドのキューに入れてもらう
         */
+
         timer.schedule( new TimerTask(){
             @Override
             public void run(){
-                if(!globals.isListEmpty()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        SortedMap<String, UsageStats> usageStatsMap;
-                        usageStatsMap = getUsageStatsMap();
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(!globals.isListEmpty()) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                SortedMap<String, UsageStats> usageStatsMap;
+                                usageStatsMap = getUsageStatsMap();
 
-                        //TODO SortedMapがNullだった時にする処理を用意する必要があるかも
-                        if (usageStatsMap != null && !usageStatsMap.isEmpty()) {
-                            usageCheck_aboveLollipop(globals.appList, usageStatsMap);
+                                //TODO SortedMapがNullだった時にする処理を用意する必要があるかも
+                                if (usageStatsMap != null && !usageStatsMap.isEmpty()) {
+                                    usageCheck_aboveLollipop(globals.appList, usageStatsMap);
+                                }
+                            } else {
+                                //FIXME UsageStatsManagerが使えないLollipop未満の端末への対処
+                                //ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
+                                // Process running
+                                //@SuppressWarnings("deprecation") ActivityManager.RunningTaskInfo foregroundTaskInfo = activityManager.getRunningTasks(1).get(0);
+                                //foregroundProcess = foregroundTaskInfo.topActivity.getPackageName();
+                            }
+                            /**
+                             * RecyclerViewの表示を更新する*/
+                            globals.adapterNotify();
+                        }else{
+                            Toast.makeText(AppUsageMonitoringService.this, "list is empty", Toast.LENGTH_SHORT).show();
                         }
-                    } else {
-                        //FIXME UsageStatsManagerが使えないLollipop未満の端末への対処
-                        //ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
-                        // Process running
-                        //@SuppressWarnings("deprecation") ActivityManager.RunningTaskInfo foregroundTaskInfo = activityManager.getRunningTasks(1).get(0);
-                        //foregroundProcess = foregroundTaskInfo.topActivity.getPackageName();
                     }
-                }
-
+                });
             }
         }, 3000, 1000*interval_seconds);
 
@@ -173,14 +188,6 @@ public class AppUsageMonitoringService extends Service {
                 }
             }
 
-            /**
-             *
-             * For Test*/
-            if(stats != null) {
-                Toast.makeText(AppUsageMonitoringService.this, "UsageStatsMap is Not Null", Toast.LENGTH_SHORT).show();
-            }
-
-
         }
         return mySortedMap;
     }
@@ -201,27 +208,19 @@ public class AppUsageMonitoringService extends Service {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     mapp.setUseTime(usageStatsMap.get(pname).getTotalTimeInForeground());
                     mapp.setLastTime(usageStatsMap.get(pname).getLastTimeUsed());
+
+                    /**
+                     *
+                     *
+                     * TEST Globals変数への再保存確認用*/
+                    Toast.makeText(this, String.format(("「%1$s」を %2$d 使用しました"),
+                            mapp.getApplicationName(), mapp.getUseTime()), Toast.LENGTH_LONG).show();
+
+                    Toast.makeText(this, String.format(("「%1$s」で %2$d credit獲得しました"),
+                            mapp.getApplicationName(), mapp.getLastEarnedCredit()), Toast.LENGTH_LONG).show();
                 }
 
                 mapp.addCredit();
-
-                /**
-                 * RecyclerViewの表示を更新する*/
-                globals.adapterNotify();
-
-
-                /**
-                 *
-                 *
-                 * TEST Globals変数への再保存確認用*/
-                Toast.makeText(this, String.format(("「%1$s」を %2$d 使用しました"),
-                        mapp.getApplicationName(), mapp.getUseTime()), Toast.LENGTH_LONG).show();
-
-                Toast.makeText(this, String.format(("「%1$s」で %2$d credit獲得しました"),
-                        mapp.getApplicationName(), mapp.getLastEarnedCredit()), Toast.LENGTH_LONG).show();
-
-
-
 
             }
 

@@ -62,6 +62,12 @@ public class InstalledAppsFinderActivity extends AppCompatActivity {
 
         //TODO チェックボックスに対応する
 
+        /**
+         *
+         *
+         *
+         * リストをタッチでGlobalsの監視用アプリリストオブジェクトに新たに監視するアプリを加える。
+         * */
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

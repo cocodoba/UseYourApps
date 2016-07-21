@@ -60,11 +60,15 @@ public class MainActivityFragment extends Fragment {
         // レイアウトマネージャを設定(ここで縦方向の標準リストであることを指定)
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mRecyclerView.getContext()));
 
-        setupRecyclerView(mRecyclerView);
-
         return mView;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        setupRecyclerView(mRecyclerView);
+
+    }
 
     private void setupRecyclerView(RecyclerView recyclerView) {
 
