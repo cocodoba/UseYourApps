@@ -34,7 +34,7 @@ public class Globals extends Application {
      * ServiceやMainActivityFragmentで使用する参照用リスト
     * アプリ、もしくはサービス起動中には、監視アプリリストがここに常に保持される*
      * */
-    public ArrayList<MonitoringApp> appList;
+    public ArrayList<MonitoringApp> appList = new ArrayList<>();
 
 
     /*グローバル変数初期化*/
@@ -49,24 +49,16 @@ public class Globals extends Application {
         if (mdao.exists()) {
             appList = mdao.findAll();
             //dataExist = true;
-        }else{
-            appList = new ArrayList<>();
-            //dataExist = false;
-            //TEST
-            /*String app = "FakeApp";
-            String pname = "anonymous.fake.app";
-            mdao.save(new MonitoringApp(app, pname));
-            appList = mdao.findAll();*/
         }
 
         //TODO throwを書いてみる
-        try {
+        /*try {
             if (mdao.exists()) {
                 appList = mdao.findAll();
             }
         }catch(NullPointerException e){
             throw new NullPointerException("SQLdb is Null");
-        }
+        }*/
 
         Log.d(TAG, "GlobalsAllInit: ");
 

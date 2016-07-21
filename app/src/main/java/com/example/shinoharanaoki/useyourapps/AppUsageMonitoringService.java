@@ -53,6 +53,7 @@ public class AppUsageMonitoringService extends Service {
     @Override
     public void onCreate(){
         setUpAppListOnGlobals(); //メソッド分ける必要あるか？
+        Log.d(TAG, "onCreate: ");
     }
 
     /*(パターン２：Globalsからデータを都度取得する)*/

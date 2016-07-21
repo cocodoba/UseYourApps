@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,8 @@ import java.util.Date;
 import java.util.List;
 
 public class InstalledAppsFinderActivity extends AppCompatActivity {
+
+    private final static String TAG = "FinderActivity";
 
     private Globals globals;
 
@@ -84,7 +87,8 @@ public class InstalledAppsFinderActivity extends AppCompatActivity {
                 /*
                 For TEST Globalsのリストに登録されたか確認用
                 */
-                Toast.makeText(InstalledAppsFinderActivity.this, globals.appList.get(0).getApplicationName(), Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "onItemClick: " + globals.appList.get(0).getApplicationName());
+                //Toast.makeText(InstalledAppsFinderActivity.this, globals.appList.get(0).getApplicationName(), Toast.LENGTH_SHORT).show();
 
 
                 //TODO インテントとハンドラ配信
