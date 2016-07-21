@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,8 @@ import java.util.ArrayList;
  */
 public class MainActivityFragment extends Fragment {
 
+    private final static String TAG = "MainActivityFragment";
+
     private View mView;
     private RecyclerView mRecyclerView = null;
     private RecyclerAdapter mAdapter = null;
@@ -31,6 +34,9 @@ public class MainActivityFragment extends Fragment {
     private IntentFilter intentFilter;
 
     private Globals globals;
+
+    /**他のActivity,ServiceからRecyclerViewを更新させるための時用*/
+    private final MainActivityFragment self = this;
 
 
     public MainActivityFragment() {
@@ -41,6 +47,9 @@ public class MainActivityFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         globals = (Globals) getActivity().getApplication();
+        globals.setActiveFragment(self);
+
+        Log.d(TAG, "onCreate: ");
     }
 
     @Override
@@ -59,22 +68,17 @@ public class MainActivityFragment extends Fragment {
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recycler_view);
         // レイアウトマネージャを設定(ここで縦方向の標準リストであることを指定)
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mRecyclerView.getContext()));
+        setupRecyclerView(mRecyclerView);
 
         return mView;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        setupRecyclerView(mRecyclerView);
-
-    }
-
     private void setupRecyclerView(RecyclerView recyclerView) {
 
-        mAdapter = globals.getAdapter();
+        mAdapter = new RecyclerAdapter(globals.appList);
         recyclerView.setAdapter(mAdapter);
-        //to[4]
+
+        Log.d(TAG, "setupRecyclerView: ");
     }
 
     public void addApp(MonitoringApp app){
@@ -86,5 +90,9 @@ public class MainActivityFragment extends Fragment {
     public void removeApp(MonitoringApp app){
 
         mAdapter.notifyItemRemoved(0);
+    }
+
+    public void updateListView(){
+        mAdapter.notifyDataSetChanged();
     }
 }

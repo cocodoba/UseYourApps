@@ -28,10 +28,9 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     private Globals globals;
     //private OnRecyclerListener mListener;
 
-    public RecyclerAdapter(Context context, ArrayList<MonitoringApp> data) {
+    public RecyclerAdapter(ArrayList<MonitoringApp> data) {
 
         mData = data;
-        mContext = context;
         //mListener = listener;
     }
 

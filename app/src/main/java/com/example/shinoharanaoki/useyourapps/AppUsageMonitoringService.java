@@ -34,6 +34,8 @@ import java.util.TreeMap;
 
 public class AppUsageMonitoringService extends Service {
 
+    private final static String TAG = "Service";
+
     private Timer timer = null;
     private int count = 0;//テスト用！！
     
@@ -59,6 +61,8 @@ public class AppUsageMonitoringService extends Service {
         globals = (Globals) this.getApplication();
         //初期化
         globals.GlobalsAllInit();
+
+        Log.d(TAG, "setUpAppListOnGlobals: ");
     }
 
     //TODO 要らないかもしれないので後で消してみる↓
@@ -115,8 +119,10 @@ public class AppUsageMonitoringService extends Service {
                                 //foregroundProcess = foregroundTaskInfo.topActivity.getPackageName();
                             }
                             /**
-                             * RecyclerViewの表示を更新する*/
+                             * RecyclerViewの表示を更新する
+                             * */
                             globals.adapterNotify();
+
                         }else{
                             Toast.makeText(AppUsageMonitoringService.this, "list is empty", Toast.LENGTH_SHORT).show();
                         }
@@ -208,6 +214,8 @@ public class AppUsageMonitoringService extends Service {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     mapp.setUseTime(usageStatsMap.get(pname).getTotalTimeInForeground());
                     mapp.setLastTime(usageStatsMap.get(pname).getLastTimeUsed());
+
+                    Log.d(TAG, "usageCheck_aboveLollipop: pname");
 
                     /**
                      *

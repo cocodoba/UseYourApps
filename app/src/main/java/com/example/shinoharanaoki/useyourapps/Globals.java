@@ -2,8 +2,11 @@ package com.example.shinoharanaoki.useyourapps;
 
 import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.widget.Toast;
 
+import com.example.shinoharanaoki.useyourapps.main_activity.MainActivityFragment;
 import com.example.shinoharanaoki.useyourapps.main_activity.RecyclerAdapter;
 import com.example.shinoharanaoki.useyourapps.models.AppDataDao;
 import com.example.shinoharanaoki.useyourapps.models.AppDataHelper;
@@ -16,16 +19,21 @@ import java.util.ArrayList;
  */
 public class Globals extends Application {
 
+    private final static String TAG = "Globals";
+
     private AppDataHelper dbHelper;
     private SQLiteDatabase db;
     private AppDataDao mdao;
 
-    private RecyclerAdapter rAdapter;
+    private MainActivityFragment mFragment;
 
     //private boolean dataExist = false;
 
-    /*ServiceやMainActivityFragmentで使用する参照用リスト
-    * アプリ、もしくはサービス起動中には、監視アプリリストがここに常に保持される* */
+    /**
+     *
+     * ServiceやMainActivityFragmentで使用する参照用リスト
+    * アプリ、もしくはサービス起動中には、監視アプリリストがここに常に保持される*
+     * */
     public ArrayList<MonitoringApp> appList;
 
 
@@ -60,7 +68,8 @@ public class Globals extends Application {
             throw new NullPointerException("SQLdb is Null");
         }
 
-        rAdapter = new RecyclerAdapter(getApplicationContext(), appList);
+        Log.d(TAG, "GlobalsAllInit: ");
+
     }
 
     public void GlobalsAllSave(){
@@ -119,12 +128,12 @@ public class Globals extends Application {
         return appList;
     }*/
 
-    public RecyclerAdapter getAdapter(){
-        return rAdapter;
+    public void setActiveFragment(MainActivityFragment fragment){
+        mFragment = fragment;
     }
 
     public void adapterNotify(){
-        rAdapter.notifyDataSetChanged();
+        mFragment.updateListView();
     }
 
 }

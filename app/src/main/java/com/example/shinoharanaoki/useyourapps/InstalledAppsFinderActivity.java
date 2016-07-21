@@ -80,8 +80,11 @@ public class InstalledAppsFinderActivity extends AppCompatActivity {
                 //newapp.setIcon(item.loadIcon(pm));
 
                 globals.addToAppList(newapp);
-
-                Toast.makeText(InstalledAppsFinderActivity.this, item.loadLabel(pm).toString(), Toast.LENGTH_SHORT).show();
+                globals.adapterNotify();
+                /*
+                For TEST Globalsのリストに登録されたか確認用
+                */
+                Toast.makeText(InstalledAppsFinderActivity.this, globals.appList.get(0).getApplicationName(), Toast.LENGTH_SHORT).show();
 
 
                 //TODO インテントとハンドラ配信
